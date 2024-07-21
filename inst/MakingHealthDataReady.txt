@@ -1,0 +1,106 @@
+data<-read.table("data_health.txt",header=T)
+attach(data)
+dim(data)
+names(data)
+area<-SEX*asian*age*msasize
+summary(area)
+
+N<-length(age) #e.g. to get N as total observations
+I<-96
+
+y<-rep(0,I)
+n<-rep(0,I)
+sum.inc.grp<-rep(0,I)
+sum.educ<-rep(0,I)
+sum.fm.size<-rep(0,I)
+
+for(i in 1:I){
+  for(k in 1:N){
+    if(area[k]==i){n[i]<-n[i]+1}
+    if(area[k]==i){y[i]<-y[i]+insure[k]}
+    if(area[k]==i){sum.fm.size[i]<-sum.fm.size[i]+FM_SIZE[k]}
+    if(area[k]==i){sum.educ[i]<-sum.educ[i]+EDUC[k]}
+    if(area[k]==i){sum.inc.grp[i]<-sum.inc.grp[i]+INCGRP[k]}
+  }
+}
+
+#sum(y)
+#sum(n)
+#sum(y)/sum(n) #Overall rate of people without health insurance
+#sum(insure)
+
+#sum(sum.fm.size)
+#sum(sum.educ)
+#sum(sum.inc.grp)
+
+ave.inc.grp<-rep(0,I)
+ave.educ<-rep(0,I)
+ave.fm.size<-rep(0,I)
+
+for(i in 1:I){
+  if(n[i]!=0){
+    ave.fm.size[i]<-sum.fm.size[i]/n[i]
+    ave.educ[i]  <-sum.educ[i]/n[i]
+    ave.inc.grp[i]<-sum.inc.grp[i]/n[i]
+  }
+}
+
+#sum(ave.fm.size)
+#sum(ave.inc.grp)
+#sum(ave.educ)
+
+y.new<-y
+n.new<-n
+ave.fm.size.new<-ave.fm.size
+ave.educ.new<-ave.educ
+ave.inc.grp.new<-ave.inc.grp
+
+I.new<-length(n.new)
+m<-I.new
+mspe.Sumca<-rep(0,m)
+
+cum.n.new<-rep(0,I.new)
+cum.n.new[1]<-n.new[1]
+for(i in 2:I.new){
+  cum.n.new[i]<-ifelse(n.new[i]>0,n.new[i]+cum.n.new[i-1],cum.n.new[i-1]+1 )
+}
+
+yi.tem<-rep(0,3002) #:3002=2925+77 zero-domains
+ave.fm.size.tem<-rep(0,3002)
+ave.educ.tem<-rep(0,3002)
+ave.inc.tem<-rep(0,3002)
+county.tem<-rep(0,3002)
+
+for(i in 1:I.new){
+  if(y.new[i]>0){
+    a4<-ifelse(i==1,1,cum.n.new[i-1]+1)
+    b4=a4+y.new[i]-1
+    yi.tem[a4:b4]<-rep(1,y.new[i])
+    b44=a4+n.new[i]-1
+    ave.fm.size.tem[a4:b44]<-rep(ave.fm.size.new[i],n.new[i])
+    ave.educ.tem[a4:b44]<-rep(ave.educ.new[i],n.new[i])
+    ave.inc.tem[a4:b44]<-rep(ave.inc.grp.new[i],n.new[i])
+    county.tem[a4:b44]<-rep(i,n.new[i])
+    #  print(a4)
+    #  print(b4)
+    #  print(b44)
+  }
+
+  if(y.new[i]==0){
+    a4<-ifelse(i==1,1,cum.n.new[i-1]+1)
+    yi.tem[a4:a4]<-0
+
+    ave.fm.size.tem[a4:a4]<-0
+    ave.educ.tem[a4:a4]<-0
+    ave.inc.tem[a4:a4]<-0
+    county.tem[a4:a4]<-i
+    # print(a4)
+  }
+}
+X.tem<-cbind(ave.inc.tem,ave.educ.tem,ave.fm.size.tem)
+Xi<-cbind(ave.inc.grp.new,ave.educ.new,ave.fm.size.new)
+
+#data=data.frame(X.tem=X.tem, yi.tem=yi.tem, m=m, n.new=n.new, county.tem=county.tem, Xi=Xi, y.new=y.new)
+#data=list(X.tem, yi.tem, m, n.new, county.tem, Xi, y.new, cum.n.new)
+
+##################################################
